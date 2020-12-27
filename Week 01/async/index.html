@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<style>
+  #wrap {
+    border: 2px solid #000;
+    border-radius: 8px;
+    width: 50px;
+    padding-bottom: 20px;
+  }
+  #wrap div {
+    width: 50px;
+    height: 50px;
+    background: #eee;
+    border-radius: 50%;
+    margin-top: 20px;
+    opacity: 0;
+  }
+  #wrap  .red {
+    background: red;
+  }
+  #wrap .green {
+    background: green;
+  }
+  #wrap .yellow {
+    background: yellow;
+  }
+  .red-wrap .red, .green-wrap .green, .yellow-wrap .yellow {
+    opacity: 1!important;
+  }
+</style>
+<body>
+  <div id="wrap" class="red-wrap">
+    <div class="red"></div>
+    <div class="green"></div>
+    <div class="yellow"></div>
+ </div>
+ <script>
+   const lightWrap = document.getElementById('wrap');
+   // 创造一个通过的promise
+   function ligthPromise(time = 1000) {
+     return new Promise((resolve, reject) => {
+       setTimeout(resolve,time);
+     })
+   }
+   function run() {
+    ligthPromise(1000).then(() => {
+      lightWrap.classList = 'green-wrap';
+      return ligthPromise(2000);
+    })
+    .then(() => {
+      lightWrap.classList = 'yellow-wrap';
+      return ligthPromise(5000);
+    }).then(() => {
+      lightWrap.classList = 'red-wrap';
+      run();
+    })
+   }
+   run();
+ </script>
+</body>
+</html>
