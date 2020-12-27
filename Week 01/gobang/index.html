@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <style>
+    body {
+      background: #ccc;
+      pointer-events: none;
+    }
+    #board {
+      opacity: 1;
+      display: block;
+      background: cornsilk;
+      margin:50px auto;
+      pointer-events: auto;
+      cursor:pointer;
+    }
+    .oprate-wrap {
+      position: absolute;
+      pointer-events: auto;
+      top: 80%;
+      left: 10%;
+    }
+    button {
+      width: 70px;
+      height: 30px;
+      background: cornsilk;
+      border: 0;
+    }
+  </style>
+  <canvas id="board"  width="450" height="450"></canvas>
+  <div class="oprate-wrap">
+    <button class="again-botton">再来一局</button>
+    <button class="repentance-botton">悔棋</button>
+  </div>
+
+</body>
+<script src="renderChess.js"></script>
+<script src="engine.js"></script>
+<script src="event.js"></script>
+</html>
