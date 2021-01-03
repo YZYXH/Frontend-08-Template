@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<style>
+  /* inline-block会产生缝隙，需要去除 */
+  html{
+    font-size: 0;
+    /* -webkit-text-size-adjust:none; */
+  }
+  .cell {
+    display: inline-block;
+    width: 6px;
+    letter-spacing: 0;
+    height: 6px;
+    line-height: 6px;
+    background: gray;
+    border-bottom: 1px solid #fff;
+    border-right: 1px solid #fff;
+    vertical-align: top;
+  }
+  #root {
+    width: 701px;
+  }
+  button {
+    width: 100px;
+    line-height: 20px;
+    font-size: 14px;
+  }
+</style>
+<body>
+  <div id="root"></div>
+  <button onclick="localStorage['map'] = JSON.stringify(maps)">保存</button>
+</body>
+<script src="index.js"></script>
+</html>
