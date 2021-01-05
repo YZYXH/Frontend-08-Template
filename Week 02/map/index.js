@@ -47,13 +47,13 @@ async function path(map, start, end) {
   const newMaps = Object.create(map);
 
   // 把起点放入进去和排序方法放进去, distance计算距离
-  const queue = new Stored(start, (a, b) => distance(a) - distance(b));
+  // const queue = new Stored(start, (a, b) => distance(a) - distance(b));
+  const queue = new BinatySearchThree(start, end);
     // 插入计算
   async function insert(x, y, pre) {
 
     // 当x, y 的横纵坐标超出棋盘范围，那么不做运算
     if(x < 0 || x >= 100 || y < 0 || y >= 100) return;
-
     // 当之前的已经走过来 不做重复的走
     if(newMaps[y * 100 + x]) return;
     
@@ -61,19 +61,23 @@ async function path(map, start, end) {
     // wrap.childNodes[y * 100 + x].style.background = 'yellow';
     // 把之前走过的地方进行标记
     newMaps[y * 100 + x] = pre;
-  
-    queue.give([x, y]);
+
+    // queue.give([x, y]);
+    queue.insert([x, y]);
   }
+  console.log(queue.take(), '98888')
 
   // 距离计算函数
   function distance(point) {
     const distance = Math.pow(point[0]- end[0],2) + Math.pow(point[1]- end[1],2);
     return distance;
   }
-  while(queue.data.length) {
+  if(queue.min().length) {
     // shift、push为广度优先搜索，pop、push为深度优先搜索
     // 获取每次拿到的最小路径坐标
-    let [x, y] = queue.take();
+    // let [x, y] = queue.take();
+    let [x, y] = queue.min();
+    console.log(queue.min(), '999')
     // 当找到的路径和结束点一致是  那么认为已经找到了
     if(x === end[0] && y === end[1]) {
       // 路径存储
