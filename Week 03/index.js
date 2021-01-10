@@ -1,3 +1,17 @@
+ 
+ 
+ // 本周学习是根据LL构建一个四则运算解析器
+
+/***
+ *  
+ * 运算表达式
+ <Expression> ::= <AddExpression><EOF>
+ 加法表达式
+ <AddExpression> ::= <MultipleExpression> | <AddExpression><+><MultiplicativeExpression> | <AddExpression><-><MultiplicativeExpression>
+ 乘法表达式（可以为一个Number | 乘法表达式 *|/Number
+ <MultipleExpression> ::= <Number> | <MultipleExpression><*><Number> | <MultipleExpression></><Number>
+*/
+
  // 分别去匹配数字、空格、换行、+、-、*、/
  const regexp = /([[0-9\.]+)|([ \t]+)|([\r\n]+)|(\+)|(\-)|(\*)|(\/)/g
 
@@ -37,13 +51,135 @@
         token.type = opation[i]; // 赋值类型
       }
     }
+    // 值为当前去匹配的内容
     token.value = result[0];
     yield token;
   }
+  // 当整个词法分析完毕之后，定义一个结束类型 EOF
+  yield {
+    type: 'EOF'
+  }
  
  }
- const result = math("100 * 12 + 20")
+ const ast = math("100 + 12 - 20")
 
- for(let token of result) {
-  console.log(token,'999')
+ let source = [];
+ for(let token of ast) {
+   // 剔除空格和换行符
+   if(token.type !== 'WhiteSpace' && token.type !== 'LineTerminator') {
+      source.push(token);
+   }
+
  }
+
+/**
+ * 乘法处理
+ * @param {*处理好的词法数组} source 
+ */
+
+ /***
+ *  
+ * 运算表达式
+ 加法表达式
+  <Expression> ::= <AddExpression><EOF>
+ <AddExpression> ::= <MultipleExpression> | <AddExpression><+><MultiplicativeExpression> | <AddExpression><-><MultiplicativeExpression>
+ 乘法表达式（可以为一个Number | 乘法表达式 *|/Number
+ <MultipleExpression> ::= <Number> | <MultipleExpression><*><Number> | <MultipleExpression></><Number>
+*/
+ function multipleExpression(source) {
+
+  // 为Number的时候
+  if(source[0].type === 'Number') {
+    // 把当前的type置为MultipleExpression， 同时删除原数组的第一项换成处理好的
+    let node = {
+      type: 'MultipleExpression',
+      children: [source[0]]
+    }
+    source.shift();
+    source.unshift(node);
+    return multipleExpression(source)
+  }
+  // 当第一项为数字的时候，那么来解析第二项是否为*或者触发
+  if(source[0].type === 'MultipleExpression' && source[1] && (source[1].type === '*' || source[1].type === '/')) {
+    let node = {
+      type: 'MultipleExpression',
+      operator: source[1].type,
+      children: [source.shift(), source.shift(), source.shift()] //  <MultipleExpression> <*> <Number>
+    }
+    source.unshift(node)
+    return multipleExpression(source)
+  }
+
+  if(source[0].type === 'MultipleExpression') {
+    return source[0];
+  }
+
+  // 递归出口，如果第0项不是MultipleExpression，则一直递归自己
+  return multipleExpression(source)
+   
+ }
+
+
+ /**
+ * 加法处理
+ * @param {*处理好的词法数组} source 
+ * 加法表达式（可为 乘法表达式|加法表达式+|-乘法表达式
+ *  <Expression> ::= <AddExpression><EOF>
+ <AddExpression> ::= <MultipleExpression> | <AddExpression><+><MultiplicativeExpression> | <AddExpression><-><MultiplicativeExpression></MultiplicativeExpression>
+ */
+function AddExpression(source) {
+  // 加法的开头为一个乘法表达式
+  if(source[0].type === 'MultipleExpression') {
+    let node = {
+      type: 'AddExpression',
+      children: [source[0]]
+    }
+    source.shift();
+    source.unshift(node);
+    return AddExpression(source);
+  }
+  if(source[0].type === 'AddExpression' &&  source[1] && (source[1].type === '+' || source[1].type === '-')) {
+    let node = {
+      type: 'AddExpression',
+      operator: source[1].type,
+      children: [source.shift(), source.shift()]
+    };
+    // 这里需要进行multipleExpression处理，变成multipleExpression表达式
+    multipleExpression(source);
+    node.children.push(source.shift());
+    source.unshift(node);
+    return AddExpression(source);
+  }
+
+  if(source[0].type === 'AddExpression') return source[0];
+  // 当不匹配的时候，需要调用已从multipleExpression来进行处理
+  multipleExpression(source);
+  return AddExpression(source);
+}
+
+
+
+// 加法终结符表达式
+function  Expression(source) {
+  // 当为加法表达式，并且又终结符时，那么运算结束
+  if(source[0].type === 'AddExpression' && source[1] && source[1].type === 'EOF') {
+    let node = {
+      type: 'Expression',
+      children: [source.shift(), source.shift()]
+    }
+    source.unshift(node);
+    return node;
+  }
+  AddExpression(source);
+  return Expression(source);
+}
+
+
+
+
+
+
+//  const result = multipleExpression(source);
+
+ const result1 = Expression(source);
+ console.log(result1,'result')
