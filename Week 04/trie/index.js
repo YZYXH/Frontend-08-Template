@@ -56,7 +56,7 @@ class Trie {
       }
     }
     findWord(this.root, '');
-
+    console.log(max, maxWord);
   }
 }
 
