@@ -41,8 +41,8 @@ class Trie {
     let maxWord = null;
     /**
      * 
-     * @param {*比对的对象} node 
-     * @param {*当前字符} word 
+     * @param {Object} node 比对的对象
+     * @param {string} word 当前字符
      */
     const findWord = (node = this.root, word) => {
       // 当出现次数大于之前的次数值时，重置次数值和字符串
