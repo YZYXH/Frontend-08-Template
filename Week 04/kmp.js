@@ -11,8 +11,25 @@
  */
 function kmp(source, patter) {
   const tabel = handlePatter(patter);
+  let i = 0, j = 0;
+  while(i < source.length && j < patter.length) {
+    if(source[i] === patter[j]) {
+      i++; j++;
+    } else {
+      if(j > 0) {
+        j = patter[j];
+      } else {
+        i++;
+      }
+    }
+    if(j === patter.length) {
+      return i;
+    }
+  }
+  return -1;
 }
-
+const test = kmp('abcdeeee', 'b');
+console.log(test,'999')
 function handlePatter(data) {
   const table = new Array(data.length).fill(0);
   // i为当前的匹配下标， j为当前位置的部分匹配符
@@ -25,10 +42,11 @@ function handlePatter(data) {
       // 存储当前的匹配值
       table[i] = j;
     } else {
+      // 当有匹配值的时候，跳到匹配值位置在进行比较
       if(j > 0) {
         j = table[j];
       } else {
-        table[i] = j;
+        // 否则的话i自增在进行下一轮比较
         i++;
       }
     }
