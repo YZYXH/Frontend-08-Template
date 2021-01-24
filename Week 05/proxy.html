@@ -1,0 +1,90 @@
+<input id = 'r' min=0 max=255 type="range" />
+<input id = 'g' min=0 max=255  type="range" />
+<input id = 'b' min=0 max=255  type="range" />
+<div id = "main" style="width: 100px; height: 100px"></div>
+<script>
+// 被操作的对象
+const obj = {
+  a: {c: '777'},
+  b: '2',
+  r: 10,
+  g: 0,
+  b: 0,
+}
+
+// 全局事件存储
+const effects = new Map();
+
+// 存储reactive值
+const reactives = new Map();
+
+// 存储reactive对象
+let useReactivites = [];
+
+const po = reactive(obj);
+
+function effect(callback) {
+  // 每次执行操作时候，需要清空
+  useReactivites =[];
+  callback(); // 此处是为了自调用，看看当前用了哪些属性 并进行注册
+  // 将当前操作的属性存入map中，和callback形成对应关系
+  for(let useReact of useReactivites) {
+    // 为了避免存在空值的情况
+    if(!effects.has(useReact[0])) {
+      effects.set(useReact[0], new Map());
+    }
+    if(!effects.get(useReact[0]).has(useReact[1])) {
+      effects.get(useReact[0]).set(useReact[1], []);
+    }
+    // 将操作的变量和操作回调形成对应关系
+    effects.get(useReact[0]).get(useReact[1]).push(callback);
+  }
+  console.log(effects,'effects')
+}
+
+effect(() => {
+  // 当effect里面从操作为proxy的时候，可以监听到数据的变化
+  // console.log(po.a.c) // 无法取到双重对象的值 因此需要将上一轮值保存下来
+  document.getElementById('r').value = po.r;
+  document.getElementById('g').value  = po.g;
+  document.getElementById('b').value  = po.b;
+  document.getElementById('main').style.background = `rgb(${po.r},${po.g},${po.b})`;
+})
+
+  document.getElementById('r').addEventListener('input', e => {
+    po.r = e.target.value;
+  })
+  document.getElementById('g').addEventListener('input', e => {
+    po.g = e.target.value;
+  })
+  document.getElementById('b').addEventListener('input', e => {
+    po.b = e.target.value;
+  })
+
+function reactive(obj) {
+  // 如果当前存在的话 直接return取值
+  if(reactives.has(obj)) {
+    return reactives.get(obj);
+  }
+  let proxy =  new Proxy(obj, {
+    set(obj, prop, value) { // 设置函数 三个参数  操作对象  设置的key 设置的value
+      obj[prop] = value;
+      // 检测当前操作是否触发回调
+      // effects.get(obj) => map {操作变量: [ callback ]}
+      if(effects.get(obj) && effects.get(obj).get(prop)) {
+        for(let callback of effects.get(obj).get(prop)) {
+          callback()
+        }
+      }
+      return obj[prop];
+    },
+    get(obj, prop) { // 获取函数
+      useReactivites.push([obj, prop]);
+      return obj[prop];
+    }
+  })
+  // 存储每一轮的proxy值
+  reactives.set(obj, proxy);
+  return proxy;
+}
+</script>

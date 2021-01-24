@@ -1,0 +1,78 @@
+<div id="drag" style="display: inline-block;width: 100px;height: 100px;background: chocolate;"></div>
+<div id="contain">
+  风柔，水润，河边的柳摇着摇着就绿了，婀娜中透着妖娆。大盐城的春天，又是一年花事稠。满城的桃花、李花、梨花、樱花，就像约好了的一样，一树树、一朵朵、一串串，挤满枝头，迎风怒放，暗香浮动，早醉了文人墨客的心，争相踏青赏花而去。归来时，浅吟低唱，配好信手拍来的相片，挥笔点点滴滴，皆是春色诗意无限。于是，阳春三月的花，就开在了好友们的空间里。
+
+周末，我也想去野外春天荡漾一下。经过传达室的时候，张大爷说有我的邮件。接过小小的一个纸包后，邮发地来自东北。拆开更是惊喜，那是76岁的母亲一针一线缝制的棉拖鞋，握在手里满满都是爱。北方春天来得迟。母亲尚不知我们这里早已是草长莺飞的仲春。想着想着，耳畔不觉就飘起了蒋大为的“妈妈不知季节已变换，送来寒衣御严冬……”，那歌声悠扬，清澈嘹亮。可眼前浮现的却是大东北残雪消融后萌芽的春，解冻复苏的黑土地，一脚踩上去，松松软软。
+
+春江水暖鸭先知。不只是鸭，还有昂首挺胸的一群大白鹅，也嘎嘎地欢叫着，噗通跳入河水畅游。沟边、田野里的婆婆丁、小头蒜，悄悄地藏在枯叶、草下，冒出了新绿。几台拖拉机在田野上轰鸣着春耕，来来回回，寂寞了一个冬天的田野从此热闹起来了。
+</div>
+
+<script>
+  const drag = document.getElementById('drag');
+  // 存储上次的移动位置
+  let posX = 0, posY = 0;
+  // 拖拽开始事件
+  drag.addEventListener('mousedown', e => {
+    const startX = e.clientX, startY = e.clientY;
+
+    // 拖拽结束事件
+    const up = (e) => {
+      // 记录下结束的位置
+      posX = posX + e.clientX - startX;
+      posY = posY + e.clientY - startY;
+      // 移除之前绑定的事件
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+    }
+
+    // 拖拽事件
+    const move = (e) => {
+      // clientX|Y - start|Y每次移动的距离
+      // const moveX = posX + e.clientX - startX, moveY = posY + e.clientY - startY;
+      // drag.style.transform = `translate(${moveX}px, ${moveY}px)`;
+
+      // 将当前最近节点找出来 插入当前拖动的元素
+      const near = getNear(e.clientX, e.clientY);
+      near.insertNode(drag);
+    }
+
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up)
+  })
+
+  // 存储当前Range对象集合
+  let ranges = [];
+  const contain = document.getElementById('contain').childNodes[0];
+  // 获取文本节点
+  const nodes = contain.textContent ;
+
+  // 每个文本节点之后插入一个range对象
+  for(let i = 0; i < nodes.length; i++) {
+    // Range 对象表示文档中的连续范围。
+    let range = document.createRange();
+    range.setStart(contain, i);
+    range.setEnd(contain, i);
+    ranges.push(range);
+  }
+
+  // 寻找最近元素
+  function getNear(x, y) {
+    let near = null;
+    // 初始值设为正无穷大
+    let min = Infinity
+    for(let node of ranges) {
+      // getBoundingClientRect()返回元素大小及相对窗口位置
+      const rect = node.getBoundingClientRect();
+      // 计算当前文本节点距离拖动元素的距离，寻找出最近的元素
+      const distance = (rect.x - x) **2 + (rect.y - y) ** 2;
+      if(distance < min) {
+        min = distance;
+        near = node;
+      }
+    }
+    return near;
+  }
+
+  // 去除文本默认选中
+  document.addEventListener('selectstart', e => e.preventDefault())
+</script>
