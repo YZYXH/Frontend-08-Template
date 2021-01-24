@@ -33,7 +33,7 @@
 
       // 将当前最近节点找出来 插入当前拖动的元素
       const near = getNear(e.clientX, e.clientY);
-      near.insertNode(drag);
+      near.insertNode(drag); // 不需要一处，当插入的是同一个元素，会默认移除
     }
 
     document.addEventListener('mousemove', move);
@@ -54,7 +54,6 @@
     range.setEnd(contain, i);
     ranges.push(range);
   }
-
   // 寻找最近元素
   function getNear(x, y) {
     let near = null;
