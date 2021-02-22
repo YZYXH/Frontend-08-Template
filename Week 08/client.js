@@ -22,8 +22,9 @@ class Http{
     this.port = props.port || 80;
     this.host = props.host;
     this.path = props.path || '/';
-    this.body = props.body;
+    this.body = props.body || [];
     this.bodyText = this.body;
+
     // 默认Content-Type为application/x-www-form-urlencoded Content-Type是一个必须的字段
     if(!this.header['Content-Type']) {
       this.header['Content-type'] = 'application/x-www-form-urlencoded';
@@ -31,7 +32,8 @@ class Http{
     } else if(this.header['Content-Type'] === 'application/json') {
       this.bodyText = JSON.stringify(this.body);
     } else if(this.header['Content-Type'] === 'application/x-www-form-urlencoded') {
-      this.bodyText = Object.keys(this.body).map(key => `${key}=${encodeURIComponent(this.body[key])}`);
+      // 此处的解析需要注意格式需要为表单形式
+      this.bodyText = Object.keys(this.body).map(key => `${key}=${encodeURIComponent(this.body[key])}`).join('&');
     }
     this.header['Content-Length'] = this.bodyText.length;
   }
@@ -44,20 +46,23 @@ class Http{
       } else {
         connection = net.createConnection({
           host: this.host,
-          port: this.host
+          port: this.port,
         }, () => {
-          connection.write(this.toString())
+          console.log(this.toString())
+          connection.write(this.toString());
         })
       }
       // 监听当前请求的数据信息 无论成功失败都要把这个请求给关闭
       connection.on('data', data => {
+        console.log('获取到的服务器返回信息：', data.toString())
         parse.receive(data.toString());
         if(parse.isFinished) {
           resolve(parse.response);
         }
         connection.end();
-      })
+      });
       connection.on('error', error => {
+        console.log(error, 'error')
         reject(error);
         connection.end();
       })
@@ -69,9 +74,9 @@ class Http{
      * HOST 127.0.0.1
      * Content-Type application/json
      */
-    const message = `${this.method} ${this.path} HTTP/1.1\r
-    ${Object.keys(this.header).map(key => `${key}=${this.header[key]}`).join('\r\n')}\r\n${this.bodyText}`;
-    return message;
+    return `${this.method} ${this.path} HTTP/1.1\r\n${Object.keys(this.header)
+      .map((key) => `${key}: ${this.header[key]}`)
+      .join("\r\n")}\r\n\r\n${this.bodyText}`;
   }
 }
 
@@ -80,8 +85,8 @@ class ResponseParse {
 
   }
   receive(str) {
-    for(let k in str) {
-      this.char(str.chatAt(k))
+    for(let i = 0; i < str.length; i++) {
+      this.char(str.charAt(i))
     }
   }
 
@@ -94,16 +99,26 @@ class ResponseParse {
 void async function () {
   const http = new Http({
     method: 'POST',
-    path: '/',
-    port: '8989',
     host: '127.0.0.1',
+    port: 8989,
     header: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: {
       name: 'http'
     }
   });
+  // const http = new Http({
+  //   method: 'GET',
+  //   host: 'www.baidu.com',
+  //   port: 80,
+  //   // header: {
+  //   //   'Content-Type': 'application/x-www-form-urlencoded',
+  //   // },
+  //   // body: {
+  //   //   name: 'http'
+  //   // }
+  // });
   const response = await http.send();
   console.log(response, 'response')
 }()
