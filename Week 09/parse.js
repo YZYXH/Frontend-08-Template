@@ -46,6 +46,7 @@ CSSOM树构建
  * 
  **/
 const css = require('css');
+const layout = require('./layout');
 let currentToken = null;
 const EOF = Symbol('EOF'); // line of end 创建一个独一无二的状态终止符
 let currentAttribute = {};
@@ -204,6 +205,9 @@ function emit(token) {
     if (token.tagName !== top.tagName) {
       throw new Error('Tag start end doesn‘t match');
     } else {
+      // 进行排版
+      layout(top);
+
       // 出栈当前元素已经挂载到父元素上面，入栈的目的是为了能获取到父元素
       stack.pop();
     }
@@ -262,7 +266,6 @@ function tagOpen(c) {
 
 function endTagOpen(c) {
   if (c.match(/^[a-zA-Z]$/)) {
-
     // 结束标签
     currentToken = {
       type: 'endTag',
@@ -279,7 +282,7 @@ function endTagOpen(c) {
 function tagName(c) {
 
   // 如果标签后面加空格的话,后面一般跟的是属性
-  if (c.match(/^[\t\n\f ]$/)) {
+  if (c.match(/^[\t\n\f ]$/)) {
     return beforeAttributeName;
 
   // 如果跟的是/ 那么他是一个自封闭标签
@@ -306,7 +309,7 @@ function tagName(c) {
 
 function beforeAttributeName(c) {
   // >标签终止
-  if (c.match(/^[\n\t\f ]/)) {
+  if (c.match(/^[\n\t\f ]/)) {
     return beforeAttributeName;
   } else if(c === '>' || c === '/' || c === EOF) {
     return afterAttributeName(c);
@@ -322,7 +325,7 @@ function beforeAttributeName(c) {
 function attributeName(c) {
 
   // 当为空格，/ > 或者结束符时，那么说明属性匹配已经结束了
-  if (c.match(/^[\n\t\f ]$/) || c === '/' || c === '>' || c === EOF) {
+  if (c.match(/^[\n\t\f ]$/) || c === '/' || c === '>' || c === EOF) {
     return afterAttributeName(c)
 
     // 为=那么说明要开始读取属性值
@@ -337,7 +340,7 @@ function attributeName(c) {
 }
 
 function beforeAttributeValue(c) {
-  if (c.match(/^[\n\t\f ]/) || c === '/' || c === '>' || c === EOF) {
+  if (c.match(/^[\n\t\f ]/) || c === '/' || c === '>' || c === EOF) {
     return beforeAttributeValue;
 
     // 双引号
@@ -387,7 +390,7 @@ function singleQuoteAttributeValue(c) {
 }
 
 function afterQuotedAttributeValue(c) {
-  if (c.match(/^[\n\t\f ]/)) {
+  if (c.match(/^[\n\t\f ]/)) {
     return beforeAttributeName;
   } else if (c === '/') { 
     return selfCloseingTagStart;
@@ -406,7 +409,7 @@ function afterQuotedAttributeValue(c) {
 function UnquotedAttributeValue(c) {
 
   // 检测为空格时候  说明开始了新属性
-  if (c.match(/^[\n\t\f ]/)) {
+  if (c.match(/^[\n\t\f ]$/)) {
     currentToken[currentAttribute.name] = currentAttribute.value;
     return beforeAttributeName;
   } else if (c === '/') {
@@ -429,7 +432,7 @@ function UnquotedAttributeValue(c) {
 function afterAttributeName(c) {
 
   // 检测到空格说明要开始新的属性匹配
-  if (c.match(/^[\n\t\f ]/)) {
+  if (c.match(/^[\n\t\f ]/)) {
     return afterAttributeName;
   } else if (c === '/') {
     return selfCloseingTagStart;

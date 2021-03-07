@@ -57,7 +57,6 @@ class Request{
       connection.on('data', data => {
         console.log(data.toString())
         parse.receive(data.toString());
-        console.log(parse,'parse')
         if(parse.isFinished) {
           resolve(parse.response);
         }
@@ -244,6 +243,6 @@ void async function () {
   console.log(response, 'response');
 //   // 获取到接口返回的html数据
   const dom = parse.parseHtml(response.body);
-console.log(dom.children[0].children[0])
+// console.log(dom.children[1].computedStyle)
 // console.log(000000111111);
 }()
