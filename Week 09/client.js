@@ -244,5 +244,6 @@ void async function () {
   console.log(response, 'response');
 //   // 获取到接口返回的html数据
   const dom = parse.parseHtml(response.body);
+console.log(dom.children[0].children[0])
 // console.log(000000111111);
 }()
