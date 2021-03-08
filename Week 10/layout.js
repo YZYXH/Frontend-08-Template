@@ -49,12 +49,12 @@ function layout(dom) {
 
   // 是否换行
   if(!style.flexWrap || style.flexWrap === 'auto') {
-    style.flexWrap = 'nowrap';
+    style.flexWrap = 'noWrap';
   }
   
   // 多条轴线排列方向
   if(!style.alignContent || style.alignContent === 'auto') {
-    style.flexWrap = 'stretch';
+    style.alignContent = 'stretch';
   }
 
   let mainSize, mainEnd, mainStart, mainSign, mainBase, crossSize, crossEnd, crossStart,
@@ -134,6 +134,176 @@ function layout(dom) {
     }
     isAutoMainSize = true;
   }
+
+  // 存储每行元素
+  let flexLine = [];
+
+  // 存储所有行元素
+  const flexLines = [flexLine];
+
+  // 获取父元素大小
+  let mainSpace = elementStyle[mainSize];
+
+  // 设置交叉轴的尺寸默认值
+  let crossSpace = 0;
+
+  for(let item of items) {
+    const itemStyle = getStyle(item);
+    // 如果元素没有设置属性的话那么把属性设置为0
+    if(itemStyle[mainSize] === null) {
+      itemStyle[mainSize] = 0;
+    }
+
+    // 如果当前元素是存在flex的话 那么元素是可以被压缩的，直接把当前元素放进去行里面
+    if(itemStyle.flex) {
+      flexLine.push(item);
+
+    // 如果是不换行的话，并且当前父元素是没有大小的
+    } else if(style.flexWrap === 'noWrap' || isAutoMainSize) {
+
+      // 计算父元素剩余空间
+      mainSpace -= itemStyle[mainSize];
+
+      // 计算当前元素的交叉轴值（为最高的元素所占据的空间）
+      if(itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0)) {
+        crossSpace = Math.max(itemStyle[crossSize], crossSpace);
+      }
+
+      flexLine.push(item);
+    } else {
+      // 当前元素超过父元素的值时，那么把子元素压缩到父元素大小
+      if(itemStyle[mainSize] > style[mainSize]) {
+        itemStyle[mainSize] = style[mainSize];
+      }
+      // 如果当前剩余的空间比子元素空间小，那么新开一行
+      if(mainSpace < itemStyle[mainSize]) {
+
+        // 存储当前行剩余主轴空间
+        flexLine.mainSpace = mainSpace;
+
+        // 存储当前行交叉轴大小
+        flexLine.crossSpace = crossSpace;
+
+        // 新开一行
+        flexLine = [item];
+        flexLines.push(flexLine);
+        
+        //重置父元素空间
+        mainSpace = style[mainSize];
+        crossSpace = 0;
+      } else {
+        // 空间足够，直接把元素放进行里面
+        flexLine.push(item);
+      }
+
+      // 计算当前元素的交叉轴值（为最高的元素所占据的空间）
+      if(itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0)) {
+        crossSpace = Math.max(itemStyle[crossSize], crossSpace);
+      }
+    }
+  }
+  // 最后一行加上mainSpace
+  flexLine.mainSpace = mainSpace;
+
+  /****
+   * 计算主轴，进行空间分配
+   */
+  
+  /**
+   * 当不换行或者父元素么有尺寸的时候，那么为一行展示
+   */
+  if(style.flexWrap === 'noWrap' || isAutoMainSiz) {
+    /**
+     * 当父元素有交叉轴尺寸的时候，那么当前最大为父元素高度
+     */
+    flexLine.crossSpace = style[crossSize] ? style[crossSize] : crossSpace;
+  } else {
+    /**
+     * 否则为之前记录的子元素最高高度
+     */
+    flexLine.crossSpace = crossSpace
+  }
+
+  /***
+   * 当剩空间<0,需要对所有元素进行等比压缩
+   */
+  if(mainSpace < 0) {
+    /**
+     * 等比的比例
+     *  */ 
+    const scale = style[mainSize]/ (style[mainSize] - mainSpace);
+    /**
+     * 当前主轴位置
+     */
+    let currentMain = mainBase;
+    for(let item of items) {
+      const itemStyle = getStyle(item);
+      /**
+       * 当属性有flex,不参与压缩
+       */
+      if(itemStyle.flex) {
+        itemStyle[mainSize] = 0;
+      } else {
+        itemStyle[mainSize] = itemStyle[mainSize] * scale;
+      }
+
+      // 当前元素开始位置
+      itemStyle[mainStart] = currentMain;
+
+      // 当前主轴的结束位置
+      itemStyle[mainEnd] = itemStyle[mainStart] + itemStyle[mainSize] * mainSign;
+
+      // 下次元素的开始位置为上个元素的结束位置
+      currentMain = itemStyle[mainEnd];
+
+    }
+  } else {
+    flexLine.forEach(items => {
+      // 当前剩余的主轴空间
+      let mainSpace = items.mainSpace;
+
+      // 总共的flex值
+      let flexTotal = 0;
+      for(let item of items) {
+        const itemStyle = getStyle(item);
+        if(itemStyle.flex !== null && itemStyle.flex !== (void 0)) {
+          flexTotal += itemStyle.flex;
+        }
+      }
+
+      // 当存在flex元素的时候 按照比例划分空间
+      if(flexTotal) {
+        let currentMain = mainBase;
+        for(let item of items) {
+          const itemStyle = getStyle(item);
+
+          // 按照当前的flex进行等比划分
+          if(itemStyle.flex) {
+            itemStyle[mainSize] = mainSpace/flexTotal * itemStyle.flex;
+          }
+
+          // 当前元素开始位置
+          itemStyle[mainStart] = currentMain;
+
+          // 当前主轴的结束位置
+          itemStyle[mainEnd] = itemStyle[mainStart] + itemStyle[mainSize] * mainSign;
+          
+          // 下次元素的开始位置为上个元素的结束位置
+          currentMain = itemStyle[mainEnd];
+        }
+      } else {
+        /**
+         * 当没有flex划分属性的时候  按照当前flex的排版方式划分
+        */
+        
+
+      }
+
+    })
+  }
+
+
+  console.log(style, 'flexLines');
 };
 
 function getStyle(element) {
