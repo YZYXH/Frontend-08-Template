@@ -243,6 +243,11 @@ void async function () {
   console.log(response, 'response');
 //   // 获取到接口返回的html数据
   const dom = parse.parseHtml(response.body);
+   // 设定绘画的范围
+  let viewport = images(800, 600);
+  render(viewport, dom)
+  // // 保存当前的绘画文件
+  viewport.save('viewport.jpg');
 // console.log(dom.children[1].computedStyle)
 // console.log(000000111111);
 }()
