@@ -1,7 +1,7 @@
 var http = require('http');
 var fs = require('fs');
 
-const responseBody =`<style>#main { width: 100px; display: flex;} .content {width: 200px; height: 200px} .content1 { width: 100px; height: 100px;}</style><div id="main"><p class="content">hello</p><div class="content1">world</div></div>`;
+const responseBody =`<style>#main { width: 100px; display: flex; flex-wrap: wrap; background-color:rgb(0,0,255);} .content {width: 200px; height: 200px;  background-color:rgb(0,255,255);} .content1 { width: 100px; height: 100px; background-color:rgb(255,255,0);}</style><div id="main"><p class="content">hello</p><div class="content1">world</div></div>`;
 
 http.createServer((request, response) => {
   let body = [];
